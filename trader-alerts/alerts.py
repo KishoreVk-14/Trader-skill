@@ -198,7 +198,10 @@ def stooq_url(sym):
 
 
 def yahoo_url(sym, host=YAHOO_HOSTS[0]):
-    return "https://%s/v8/finance/chart/%s?range=1d&interval=1d" % (host, sym.upper().replace(".", "-"))
+    s = sym.upper()
+    if not s.endswith((".NS", ".BO", "=X")):
+        s = s.replace(".", "-")
+    return "https://%s/v8/finance/chart/%s?range=1d&interval=1d" % (host, s)
 
 
 def parse_stooq(text, sym):

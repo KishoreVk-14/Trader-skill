@@ -479,8 +479,8 @@ def check(orders, cfg, portfolio=None, prices=None, state=None, today=None, now=
                                "(\"allow_options\": false)" % sym)
             else:
                 warns.append("option order: options can lose 100%% of what you pay")
-        elif sym and ("/" in sym or not TICKER.match(sym)):
-            reasons.append("asset: %s does not look like a US stock or ETF ticker; "
+        elif sym and ("/" in sym or not (TICKER.match(sym) or sym.endswith((".NS", ".BO", "=X")) or "-" in sym)):
+            reasons.append("asset: %s does not look like a valid stock, crypto, forex, or ETF ticker; "
                            "this pack trades stocks and ETFs only" % sym)
 
         # the reference price: what one share costs to get in

@@ -268,7 +268,10 @@ def yahoo_get(path):
 
 
 def to_yahoo(sym):
-    return sym.upper().replace(".", "-")
+    s = sym.upper()
+    if s.endswith((".NS", ".BO", "=X")):
+        return s
+    return s.replace(".", "-")
 
 
 def spark_path(symbols, rng, interval):
