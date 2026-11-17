@@ -8,5 +8,6 @@ trader/orders.json
 trader/watchlist.json
 trader/plan.json
 trader/timemachine.json
+trader/entry.json
 .DS_Store
 Thumbs.db

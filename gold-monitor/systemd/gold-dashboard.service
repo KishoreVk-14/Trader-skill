@@ -1,0 +1,14 @@
+[Unit]
+Description=Gold SMC Strategy Dashboard Web Service
+After=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/gold-monitor
+EnvironmentFile=/home/ubuntu/gold-monitor/.env
+ExecStart=/home/ubuntu/gold-monitor/venv/bin/python -m app.main web --port 8060
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

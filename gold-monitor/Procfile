@@ -1,0 +1,1 @@
+web: python -m app.main web --port $PORT --host 0.0.0.0

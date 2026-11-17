@@ -1,0 +1,14 @@
+[Unit]
+Description=Gold SMC Strategy Market Collector Service
+After=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/gold-monitor
+EnvironmentFile=/home/ubuntu/gold-monitor/.env
+ExecStart=/home/ubuntu/gold-monitor/venv/bin/python -m app.main run-collector
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GOLD SMC MONITOR · XAU/USD Institutional Strategy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo-gem">Au</div>
+      <div>
+        <div class="logo-title">GOLD SMC</div>
+        <div class="logo-sub">INSTITUTIONAL STRATEGY</div>
+      </div>
+    </div>
+
+    <div class="nav-section-title">WORKSPACE</div>
+    <nav>
+      <button class="nav-btn active" data-tab="overview">
+        <span class="icon">◫</span> Market Overview
+      </button>
+      <button class="nav-btn" data-tab="chart-tab">
+        <span class="icon">⌁</span> Live Chart & Rationale
+      </button>
+      <button class="nav-btn" data-tab="paper-tab">
+        <span class="icon">▥</span> Paper Trading
+      </button>
+      <button class="nav-btn" data-tab="backtest-tab">
+        <span class="icon">◈</span> 1-Year Backtest Data
+      </button>
+      <button class="nav-btn" data-tab="activity-tab">
+        <span class="icon">◷</span> Collector Activity
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <span class="pulse-dot"></span>
+        <span>ENGINE ACTIVE</span>
+      </div>
+      <div class="symbol-badge">XAU/USD · 4H/1H/15M/5M</div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main>
+    <header class="topbar">
+      <div>
+        <div class="topbar-tag">INSTITUTIONAL ORDER FLOW · LIQUIDITY MITIGATION · SMT</div>
+        <h1 id="view-title">Market Overview</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="session-pill" style="border-color: rgba(54, 211, 153, 0.4); color: var(--green);" title="Auto-polling real market every 60s">
+          <span class="pulse-dot"></span>
+          <span>FORWARD TESTING: LIVE</span>
+        </div>
+        <div class="session-pill" id="session-pill">
+          <span class="session-dot"></span>
+          <span id="session-name">CHECKING SESSION…</span>
+        </div>
+        <button id="btn-cycle" class="btn-primary" title="Trigger Strategy Evaluation">
+          ↻ Evaluate Now
+        </button>
+      </div>
+    </header>
+
+    <!-- TAB 1: OVERVIEW -->
+    <section id="overview" class="tab-pane active">
+      <!-- Hero Banner -->
+      <div class="hero-card">
+        <div class="hero-left">
+          <div class="gold-badge">GOLD · XAU/USD</div>
+          <div class="hero-price" id="hero-price">$0,000.00</div>
+          <div class="hero-sub" id="hero-sub">Loading multi-timeframe market feeds…</div>
+        </div>
+        <div class="hero-right">
+          <div class="signal-banner" id="signal-banner">
+            <span class="signal-state" id="signal-state">ANALYZING…</span>
+            <div class="signal-desc" id="signal-desc">Evaluating 4H, 1H, 15M, and 5M alignment</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="m-label">4H MACRO TREND</div>
+          <div class="m-val" id="metric-4h-trend">—</div>
+          <div class="m-sub" id="metric-4h-sub">Higher timeframe bias</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label">15M INTRADAY TREND</div>
+          <div class="m-val" id="metric-15m-trend">—</div>
+          <div class="m-sub" id="metric-15m-sub">Day structure alignment</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label">HTF FVG MITIGATION</div>
+          <div class="m-val" id="metric-htf-mitigation">—</div>
+          <div class="m-sub" id="metric-htf-sub">4H/1H Internal Liquidity</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label">SMT DIVERGENCE (XAU/XAG)</div>
+          <div class="m-val" id="metric-smt-status">—</div>
+          <div class="m-sub" id="metric-smt-sub">Relative strength vs Silver</div>
+        </div>
+      </div>
+
+      <!-- Strategy 6-Gate Diagnostic Breakdown -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="p-tag">ALGORITHMIC STATE MACHINE</div>
+            <h3>Strategy Condition Gates</h3>
+          </div>
+          <span class="badge badge-info">Multi-Timeframe Audit</span>
+        </div>
+        <div class="gates-list" id="gates-container">
+          <!-- Dynamically populated by JS -->
+          <div class="gate-row">Loading strategy gate checks…</div>
+        </div>
+      </div>
+
+      <!-- Active Trade Plan / Execution Setup -->
+      <div class="panel" id="trade-plan-panel" style="display: none;">
+        <div class="panel-header">
+          <div>
+            <div class="p-tag">EXECUTION TICKET</div>
+            <h3 id="plan-headline">Pending Setup Detected</h3>
+          </div>
+          <span class="badge badge-green" id="plan-side-badge">BUY</span>
+        </div>
+        <div class="plan-details-grid" id="plan-details-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: LIVE CHART & RATIONALE -->
+    <section id="chart-tab" class="tab-pane">
+      <div class="chart-controls">
+        <div class="timeframe-selector">
+          <button class="tf-btn" data-tf="4h">4H</button>
+          <button class="tf-btn" data-tf="1h">1H</button>
+          <button class="tf-btn" data-tf="15min">15M</button>
+          <button class="tf-btn active" data-tf="5min">5M (Entry TF)</button>
+        </div>
+        <div class="chart-right-controls">
+          <div class="chart-layer-filters">
+            <label class="filter-check"><input type="checkbox" id="layer-price" checked> <span>Price</span></label>
+            <label class="filter-check"><input type="checkbox" id="layer-ema50" checked> <span>EMA 50</span></label>
+            <label class="filter-check"><input type="checkbox" id="layer-ema200" checked> <span>EMA 200</span></label>
+            <label class="filter-check"><input type="checkbox" id="layer-fvg" checked> <span>FVG Zones</span></label>
+          </div>
+          <select id="chart-limit-select" class="filter-select-sm">
+            <option value="100">100 Bars</option>
+            <option value="250" selected>250 Bars</option>
+            <option value="500">500 Bars</option>
+          </select>
+          <span class="chart-info-tag" id="chart-candles-count">300 Bars</span>
+        </div>
+      </div>
+
+      <!-- Chart Canvas Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="p-tag">TECHNICAL PRICE ACTION</div>
+            <h3 id="chart-canvas-title">XAU/USD · 5-Minute Chart</h3>
+          </div>
+          <div class="legend-pills">
+            <span class="pill-blue">● Price</span>
+            <span class="pill-amber">● EMA 50</span>
+            <span class="pill-purple">● EMA 200</span>
+            <span class="pill-green">■ 5M FVG (50% CE)</span>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="main-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Trade Rationale & Audit Trail Box -->
+      <div class="panel rationale-box">
+        <div class="panel-header">
+          <div>
+            <div class="p-tag">INSTITUTIONAL AUDIT TRAIL</div>
+            <h3>Trade Rationale & Setup Mechanics</h3>
+          </div>
+          <span class="badge badge-gold" id="rationale-type-badge">LIVE STRATEGY RATIONALE</span>
+        </div>
+        <div class="rationale-content" id="rationale-content">
+          Select a trade from the Paper Trading or Backtest tab, or monitor the current live strategy condition breakdown above.
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: PAPER TRADING -->
+    <section id="paper-tab" class="tab-pane">
+      <!-- Paper Portfolio Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="m-label">VIRTUAL EQUITY</div>
+          <div class="m-val" id="paper-equity">$10,000.00</div>
+          <div class="m-sub">1% Risk Per Trade</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label">NET REALIZED P&L</div>
+          <div class="m-val" id="paper-pnl">$0.00</div>
+          <div class="m-sub" id="paper-pnl-pct">+0.0%</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label">WIN RATE</div>
+          <div class="m-val" id="paper-winrate">0.0%</div>
+          <div class="m-sub" id="paper-winloss">0 Wins / 0 Losses</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label">PROFIT FACTOR</div>
+          <div class="m-val" id="paper-pf">0.00</div>
+          <div class="m-sub">Avg R: <span id="paper-avgr">0.0R</span></div>
+        </div>
+      </div>
+
+      <!-- Paper Trade Universal Filter Toolbar -->
+      <div class="panel filter-panel">
+        <div class="filter-toolbar-header">
+          <span class="filter-title">⚡ PAPER TRADING FILTERS & QUERY</span>
+          <span class="filter-badge" id="paper-filtered-count-badge">Showing All Trades</span>
+        </div>
+        <div class="filter-toolbar-row">
+          <div class="filter-field">
+            <label>STATUS</label>
+            <select id="paper-filter-status" class="filter-select">
+              <option value="ALL">All Statuses</option>
+              <option value="OPEN">Open Positions</option>
+              <option value="CLOSED">Closed Trades</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label>SIDE</label>
+            <select id="paper-filter-side" class="filter-select">
+              <option value="ALL">All Sides</option>
+              <option value="BUY">Longs (BUY)</option>
+              <option value="SELL">Shorts (SELL)</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label>OUTCOME</label>
+            <select id="paper-filter-outcome" class="filter-select">
+              <option value="ALL">All Outcomes</option>
+              <option value="WIN">Winners (TP)</option>
+              <option value="LOSS">Losers (SL)</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label>DATE FROM</label>
+            <input type="date" id="paper-filter-date-from" class="filter-input">
+          </div>
+          <div class="filter-field">
+            <label>DATE TO</label>
+            <input type="date" id="paper-filter-date-to" class="filter-input">
+          </div>
+          <div class="filter-field flex-grow">
+            <label>SEARCH DETAILS</label>
+            <input type="text" id="paper-filter-search" class="filter-input" placeholder="Search symbol, reason, price...">
+          </div>
+          <div class="filter-actions">
+            <button id="btn-reset-paper-filters" class="btn-outline-sm">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Open Positions -->
+      <div class="panel" id="open-positions-panel">
+        <div class="panel-header">
+          <div>
+            <div class="p-tag">ACTIVE EXPOSURE</div>
+            <h3>Open Positions</h3>
+          </div>
+          <span class="badge badge-info" id="open-count-badge">0 Open</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>SYMBOL</th>
+                <th>SIDE</th>
+                <th>ENTRY TIME (UTC)</th>
+                <th>ENTRY (50% CE)</th>
+                <th>UNITS</th>
+                <th>STOP LOSS</th>
+                <th>TAKE PROFIT (DOL)</th>
+                <th>RISK ($)</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="open-trades-tbody">
+              <tr><td colspan="10" class="empty-state">No open positions. Waiting for multi-timeframe entry signal.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Closed Trade History -->
+      <div class="panel" id="closed-positions-panel">
+        <div class="panel-header">
+          <div>
+            <div class="p-tag">HISTORICAL EXECUTION</div>
+            <h3>Closed Paper Trades</h3>
+          </div>
+          <span class="badge badge-secondary">Click row to inspect on chart</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>SIDE</th>
+                <th>ENTRY TIME</th>
+                <th>ENTRY</th>
+                <th>EXIT TIME</th>
+                <th>EXIT PRICE</th>
+                <th>EXIT REASON</th>
+                <th>P&L ($)</th>
+                <th>R-MULT</th>
+                <th>ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="closed-trades-tbody">
+              <tr><td colspan="10" class="empty-state">No closed trades yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: 1-YEAR BACKTEST DATA -->
+    <section id="backtest-tab" class="tab-pane">
+      <!-- Strategy Version Switcher Bar -->
+      <div class="version-switcher-bar">
+        <div class="version-tabs">
+          <button class="ver-tab-btn active" id="btn-ver-v2" data-ver="v2">
+            <span class="icon">⚡</span> V2 Advanced Institutional
+          </button>
+          <button class="ver-tab-btn" id="btn-ver-v1" data-ver="v1">
+            <span class="icon">◈</span> V1 Baseline 6-Gate
+          </button>
+          <button class="ver-tab-btn ver-comp" id="btn-ver-comp" data-ver="compare">
+            <span class="icon">⇄</span> Side-by-Side Comparison Matrix
+          </button>
+        </div>
+        <div class="version-tag-badge" id="active-version-badge">
+          ACTIVE: V2 ADVANCED INSTITUTIONAL ($500 CAPITAL · 1% RISK · STEP TRAILING SL · NO 12:30-1:45 PM IST)
+        </div>
+      </div>
+
+      <!-- Side-by-Side Comparison Matrix Card -->
+      <div class="panel comparison-panel" id="comparison-card" style="display: none; border-left: 4px solid var(--green);">
+        <div class="panel-header">
+          <div>
+            <div class="p-tag">QUANTITATIVE COMPARISON · 365 DAYS</div>
+            <h3>V1 Baseline vs V2 Advanced Institutional Comparison</h3>
+          </div>
+          <span class="badge badge-green" id="comp-verdict-badge">V2 OUTPERFORMS V1: +20.4% WIN RATE</span>
+        </div>
+        <div class="table-wrap">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>PERFORMANCE METRIC</th>
+                <th>V1 BASELINE (Original 6-Gate)</th>
+                <th>V2 ADVANCED INSTITUTIONAL</th>
+                <th>DELTA (IMPROVEMENT)</th>
+              </tr>
+            </thead>
+            <tbody id="comparison-tbody">
+              <!-- Dynamically populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="p-tag" id="bt-report-tag">QUANTITATIVE VALIDATION · 365 DAYS</div>
+            <h3 id="bt-report-title">1-Year Historical Backtest Report</h3>
+          </div>
+          <div class="backtest-actions">
+            <button id="btn-refresh-backtest" class="btn-outline">↻ Re-run Simulation</button>
+          </div>
+        </div>
+
+        <!-- Backtest Metrics Grid -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="m-label">INITIAL CAPITAL</div>
+            <div class="m-val" id="bt-initial">$10,000.00</div>
+            <div class="m-sub">Fixed 1.0% risk</div>
+          </div>
+          <div class="metric-card">
+            <div class="m-label">FINAL EQUITY</div>
+            <div class="m-val" id="bt-final">$0.00</div>
+            <div class="m-sub" id="bt-return">+0.0% Return</div>
+          </div>
+          <div class="metric-card">
+            <div class="m-label">WIN RATE</div>
+            <div class="m-val" id="bt-winrate">0.0%</div>
+            <div class="m-sub" id="bt-winloss">0 Wins / 0 Losses</div>
+          </div>
+          <div class="metric-card">
+            <div class="m-label">PROFIT FACTOR</div>
+            <div class="m-val" id="bt-pf">0.00</div>
+            <div class="m-sub">Gross Win/Loss</div>
+          </div>
+          <div class="metric-card">
+            <div class="m-label">MAX DRAWDOWN</div>
+            <div class="m-val text-red" id="bt-maxdd">0.0%</div>
+            <div class="m-sub" id="bt-maxdd-usd">$0.00 Max Dip</div>
+          </div>
+          <div class="metric-card">
+            <div class="m-label">AVG R-MULTIPLE</div>
+            <div class="m-val text-green" id="bt-avgr">0.0R</div>
+            <div class="m-sub">Per closed trade</div>
+          </div>
+          <div class="metric-card">
+            <div class="m-label">SHARPE RATIO</div>
+            <div class="m-val" id="bt-sharpe">0.00</div>
+            <div class="m-sub">Risk-adjusted return</div>
+          </div>
+          <div class="metric-card">
+            <div class="m-label">TOTAL TRADES</div>
+            <div class="m-val" id="bt-trades">0</div>
+            <div class="m-sub">365-day sample</div>
+          </div>
+        </div>
+
+        <!-- 1-Year Equity Curve Chart -->
+        <div class="panel sub-panel">
+          <div class="panel-header">
+            <div>
+              <div class="p-tag">GROWTH TRAJECTORY</div>
+              <h4 id="equity-chart-title">1-Year Cumulative Equity Curve</h4>
+            </div>
+          </div>
+          <div class="chart-container-sm">
+            <canvas id="equity-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Comprehensive 1-Year Trade Log with Rationale & Rich Filters -->
+        <div class="panel sub-panel">
+          <div class="panel-header">
+            <div>
+              <div class="p-tag">AUDIT LOG & FILTER ENGINE</div>
+              <h4>All Backtested Trades & Rationale</h4>
+            </div>
+          </div>
+
+          <!-- Backtest Filter Toolbar -->
+          <div class="filter-panel inner-filter">
+            <div class="filter-toolbar-row">
+              <div class="filter-field">
+                <label>SIDE</label>
+                <select id="bt-filter-side" class="filter-select">
+                  <option value="ALL">All Sides (BUY & SELL)</option>
+                  <option value="BUY">Longs (BUY)</option>
+                  <option value="SELL">Shorts (SELL)</option>
+                </select>
+              </div>
+              <div class="filter-field">
+                <label>OUTCOME</label>
+                <select id="bt-filter-outcome" class="filter-select">
+                  <option value="ALL">All Outcomes</option>
+                  <option value="WIN">Winners (TP)</option>
+                  <option value="LOSS">Losers (SL)</option>
+                </select>
+              </div>
+              <div class="filter-field">
+                <label>SESSION WINDOW</label>
+                <select id="bt-filter-session" class="filter-select">
+                  <option value="ALL">All Sessions</option>
+                  <option value="LONDON_OPEN_KILLZONE">London Open Killzone</option>
+                  <option value="NEW_YORK_AM_KILLZONE">New York AM Killzone</option>
+                </select>
+              </div>
+              <div class="filter-field">
+                <label>MIN R-MULTIPLE</label>
+                <select id="bt-filter-min-r" class="filter-select">
+                  <option value="ALL">All R-Multiples</option>
+                  <option value="1.8">≥ 1.8R</option>
+                  <option value="2.0">≥ 2.0R</option>
+                  <option value="2.5">≥ 2.5R</option>
+                  <option value="3.0">≥ 3.0R</option>
+                </select>
+              </div>
+              <div class="filter-field">
+                <label>DATE FROM</label>
+                <input type="date" id="bt-filter-date-from" class="filter-input">
+              </div>
+              <div class="filter-field">
+                <label>DATE TO</label>
+                <input type="date" id="bt-filter-date-to" class="filter-input">
+              </div>
+              <div class="filter-field flex-grow">
+                <label>SEARCH RATIONALE / DATA</label>
+                <input type="text" id="bt-filter-search" class="filter-input" placeholder="Search keywords: SMT, 4H, FVG, displacement...">
+              </div>
+              <div class="filter-actions">
+                <button id="btn-reset-bt-filters" class="btn-outline-sm">Reset</button>
+                <button id="btn-export-bt-csv" class="btn-primary-sm">⬇ Export CSV</button>
+              </div>
+            </div>
+
+            <!-- Dynamic Filtered Subset Performance Metric Bar -->
+            <div class="filtered-metrics-banner" id="bt-filtered-metrics-banner">
+              <div class="f-metric"><b>FILTERED TRADES:</b> <span id="f-trades-count">—</span></div>
+              <div class="f-metric"><b>WIN RATE:</b> <span id="f-win-rate">—</span></div>
+              <div class="f-metric"><b>NET P&L:</b> <span id="f-net-pnl">—</span></div>
+              <div class="f-metric"><b>PROFIT FACTOR:</b> <span id="f-pf">—</span></div>
+              <div class="f-metric"><b>AVG R:</b> <span id="f-avg-r">—</span></div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>SIDE</th>
+                  <th>ENTRY TIME</th>
+                  <th>50% CE ENTRY</th>
+                  <th>SL</th>
+                  <th>TP (DOL)</th>
+                  <th>EXIT PRICE</th>
+                  <th>OUTCOME</th>
+                  <th>P&L ($)</th>
+                  <th>R</th>
+                  <th>WHY THIS TRADE WAS TAKEN (FULL RATIONALE)</th>
+                </tr>
+              </thead>
+              <tbody id="backtest-trades-tbody">
+                <tr><td colspan="11" class="empty-state">Loading backtest trades…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 5: COLLECTOR ACTIVITY -->
+    <section id="activity-tab" class="tab-pane">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="p-tag">SYSTEM OBSERVABILITY</div>
+            <h3>Collector & Engine Activity Logs</h3>
+          </div>
+          <span class="badge badge-info">Real-time Polling Logs</span>
+        </div>
+
+        <!-- Activity Filter Toolbar -->
+        <div class="filter-panel inner-filter">
+          <div class="filter-toolbar-row">
+            <div class="filter-field">
+              <label>STATUS</label>
+              <select id="act-filter-status" class="filter-select">
+                <option value="ALL">All Statuses</option>
+                <option value="OK">OK Only</option>
+                <option value="ERROR">Errors Only</option>
+              </select>
+            </div>
+            <div class="filter-field">
+              <label>INTERVAL</label>
+              <select id="act-filter-interval" class="filter-select">
+                <option value="ALL">All Intervals</option>
+                <option value="5min">5min</option>
+                <option value="15min">15min</option>
+                <option value="1h">1h</option>
+                <option value="4h">4h</option>
+                <option value="ALL_TIMEFRAMES">ALL_TIMEFRAMES</option>
+              </select>
+            </div>
+            <div class="filter-field flex-grow">
+              <label>SEARCH MESSAGE</label>
+              <input type="text" id="act-filter-search" class="filter-input" placeholder="Search message text...">
+            </div>
+            <div class="filter-field">
+              <label>LIMIT</label>
+              <select id="act-filter-limit" class="filter-select">
+                <option value="25">25 rows</option>
+                <option value="50" selected>50 rows</option>
+                <option value="100">100 rows</option>
+                <option value="200">200 rows</option>
+              </select>
+            </div>
+            <div class="filter-actions">
+              <button id="btn-reset-act-filters" class="btn-outline-sm">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>TIMESTAMP (UTC)</th>
+                <th>SYMBOL</th>
+                <th>INTERVAL</th>
+                <th>ROWS</th>
+                <th>STATUS</th>
+                <th>MESSAGE</th>
+              </tr>
+            </thead>
+            <tbody id="activity-tbody">
+              <tr><td colspan="7" class="empty-state">No logs recorded yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Global Footer -->
+    <footer>
+      <div class="footer-left">
+        <b>GOLD SMC STRATEGY MONITOR</b> · Institutional 4H/1H/15M/5M Order Flow & Liquidity
+      </div>
+      <div class="footer-right">
+        Mode: Read-Only Simulation · No Broker Execution Connected
+      </div>
+    </footer>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
