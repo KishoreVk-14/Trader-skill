@@ -26,6 +26,8 @@ app = Flask(
     template_folder=os.path.join(os.path.dirname(__file__), "..", "..", "templates"),
     static_folder=os.path.join(os.path.dirname(__file__), "..", "..", "static")
 )
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.jinja_env.auto_reload = True
 
 def ensure_initial_market_data():
     """Seeds database with high-resolution Gold & Silver candles if empty."""

@@ -271,28 +271,43 @@ async function loadMarketChart(timeframe = "5min") {
         },
       });
 
-      // Candlestick Series
-      candleSeries = tvChart.addCandlestickSeries({
+      // Candlestick Series (v5 addSeries with v4 addCandlestickSeries fallback)
+      const candleOpts = {
         upColor: '#22c55e',
         downColor: '#ef4444',
         borderVisible: false,
         wickUpColor: '#22c55e',
         wickDownColor: '#ef4444',
-      });
+      };
+      if (typeof tvChart.addSeries === 'function' && window.LightweightCharts.CandlestickSeries) {
+        candleSeries = tvChart.addSeries(window.LightweightCharts.CandlestickSeries, candleOpts);
+      } else if (typeof tvChart.addCandlestickSeries === 'function') {
+        candleSeries = tvChart.addCandlestickSeries(candleOpts);
+      }
 
       // EMA 50 Line Series (Amber)
-      ema50Series = tvChart.addLineSeries({
+      const ema50Opts = {
         color: '#f5b942',
         lineWidth: 2,
         title: 'EMA 50',
-      });
+      };
+      if (typeof tvChart.addSeries === 'function' && window.LightweightCharts.LineSeries) {
+        ema50Series = tvChart.addSeries(window.LightweightCharts.LineSeries, ema50Opts);
+      } else if (typeof tvChart.addLineSeries === 'function') {
+        ema50Series = tvChart.addLineSeries(ema50Opts);
+      }
 
       // EMA 200 Line Series (Purple)
-      ema200Series = tvChart.addLineSeries({
+      const ema200Opts = {
         color: '#a855f7',
         lineWidth: 2,
         title: 'EMA 200',
-      });
+      };
+      if (typeof tvChart.addSeries === 'function' && window.LightweightCharts.LineSeries) {
+        ema200Series = tvChart.addSeries(window.LightweightCharts.LineSeries, ema200Opts);
+      } else if (typeof tvChart.addLineSeries === 'function') {
+        ema200Series = tvChart.addLineSeries(ema200Opts);
+      }
 
       // Subscribe to Crosshair hover to update OHLC header live
       tvChart.subscribeCrosshairMove(param => {
@@ -300,8 +315,8 @@ async function loadMarketChart(timeframe = "5min") {
           updateOhlcHeader(lastOhlcBarData);
           return;
         }
-        const bar = param.seriesData.get(candleSeries);
-        if (bar) {
+        const bar = param.seriesData.get ? param.seriesData.get(candleSeries) : null;
+        if (bar && (bar.open !== undefined || bar.close !== undefined)) {
           updateOhlcHeader(bar);
         } else {
           updateOhlcHeader(lastOhlcBarData);
