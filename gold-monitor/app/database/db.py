@@ -230,7 +230,7 @@ def save_backtest_cache(metrics: Dict[str, Any], trades: List[Dict[str, Any]], v
                 generated_at=excluded.generated_at,
                 metrics_json=excluded.metrics_json,
                 trades_json=excluded.trades_json
-        """, (version_key, json.dumps(metrics), json.dumps(trades)))
+        """, (version_key, json.dumps(metrics, default=str), json.dumps(trades, default=str)))
 
 def get_backtest_cache(version_key: str = "v2_upgraded") -> Optional[Dict[str, Any]]:
     init_db()

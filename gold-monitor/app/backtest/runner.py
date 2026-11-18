@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timezone, time
 from typing import Dict, Any, List, Optional
-from app.api.market_data import generate_synthetic_candles, resample_candles
+from app.api.market_data import generate_synthetic_candles, resample_candles, fetch_real_historical_year
 from app.smc.strategy import evaluate_strategy
 from app.smc.order_block import find_order_blocks, check_order_block_mitigation
 from app.smc.sessions import get_session_info
@@ -41,7 +41,7 @@ def run_v1_baseline(df_gold_5m: pd.DataFrame, df_silver_5m: pd.DataFrame) -> Dic
     step = 2
 
     for idx in range(warmup, total_candles, step):
-        c_time = datetimes[idx]
+        c_time = str(datetimes[idx])
         c_high = highs[idx]
         c_low = lows[idx]
         c_close = closes[idx]
@@ -535,9 +535,9 @@ def run_one_year_backtest(version: str = "v2", force_refresh: bool = False) -> D
         if cached:
             return cached
 
-    # Generate synthetic year
-    df_gold_5m = generate_synthetic_candles(base_price=2380.0, days=365, interval_minutes=5, seed=101)
-    df_silver_5m = generate_synthetic_candles(base_price=28.50, days=365, interval_minutes=5, seed=202)
+    # Load 1-year real historical CME Gold & Silver data ($3,800 - $5,600)
+    df_gold_5m = fetch_real_historical_year(symbol="GC=F")
+    df_silver_5m = fetch_real_historical_year(symbol="SI=F")
 
     if version_key == "v1_baseline":
         res = run_v1_baseline(df_gold_5m, df_silver_5m)
