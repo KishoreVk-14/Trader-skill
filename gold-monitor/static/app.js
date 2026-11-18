@@ -61,6 +61,13 @@ function initTabs() {
 
       if (tabId === "chart-tab") {
         loadMarketChart(currentTf);
+        setTimeout(() => {
+          const container = $("#tv-chart-container");
+          if (tvChart && container && container.clientWidth > 0) {
+            tvChart.applyOptions({ width: container.clientWidth });
+            tvChart.timeScale().fitContent();
+          }
+        }, 50);
       } else if (tabId === "paper-tab") {
         loadPaperTrading();
       } else if (tabId === "backtest-tab") {
@@ -174,9 +181,38 @@ async function refreshMarketOverview() {
   }
 }
 
-// 3. Technical Chart with Overlays
-// 3. Technical Chart with Layer Filters & Overlays
-let activeFvgsCache = [];
+// 3. Technical Candlestick Chart with TradingView Lightweight Charts & Overlays
+let tvChart = null;
+let candleSeries = null;
+let ema50Series = null;
+let ema200Series = null;
+let fvgPriceLine = null;
+let lastOhlcBarData = null;
+
+function updateOhlcHeader(bar) {
+  if (!bar) return;
+  const oEl = $("#ohlc-open");
+  const hEl = $("#ohlc-high");
+  const lEl = $("#ohlc-low");
+  const cEl = $("#ohlc-close");
+  const chgEl = $("#ohlc-change-badge");
+  if (!oEl || !hEl || !lEl || !cEl) return;
+
+  oEl.textContent = fmt(bar.open);
+  hEl.textContent = fmt(bar.high);
+  lEl.textContent = fmt(bar.low);
+  cEl.textContent = fmt(bar.close);
+
+  const diff = bar.close - bar.open;
+  const pct = bar.open ? (diff / bar.open) * 100 : 0;
+  const sign = diff >= 0 ? "+" : "";
+  const isUp = diff >= 0;
+
+  if (chgEl) {
+    chgEl.textContent = `${sign}${fmt(diff)} (${sign}${fmt(pct, 2)}%)`;
+    chgEl.className = `ohlc-item ${isUp ? 'ohlc-up' : 'ohlc-down'}`;
+  }
+}
 
 async function loadMarketChart(timeframe = "5min") {
   try {
@@ -186,106 +222,181 @@ async function loadMarketChart(timeframe = "5min") {
     if (!candles || !candles.length) return;
 
     $("#chart-candles-count").textContent = `${candles.length} Bars (${timeframe.toUpperCase()})`;
-    $("#chart-canvas-title").textContent = `XAU/USD · ${timeframe.toUpperCase()} Institutional Chart`;
+    $("#chart-canvas-title").textContent = `XAU/USD · ${timeframe.toUpperCase()} Institutional Candlestick Chart`;
 
-    const labels = candles.map(c => {
-      const d = new Date(c.datetime);
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-    });
-    const closes = candles.map(c => floatVal(c.close));
+    const container = $("#tv-chart-container");
+    if (!container) return;
 
-    const ema50 = calcEma(closes, 50);
-    const ema200 = calcEma(closes, 200);
+    // Initialize TradingView Lightweight Charts instance if not yet created
+    if (!tvChart && window.LightweightCharts) {
+      tvChart = LightweightCharts.createChart(container, {
+        width: container.clientWidth || 800,
+        height: 500,
+        layout: {
+          background: { type: 'solid', color: '#0c1524' },
+          textColor: '#8b9bb4',
+          fontFamily: "'DM Mono', monospace",
+          fontSize: 11,
+        },
+        grid: {
+          vertLines: { color: 'rgba(27, 45, 73, 0.4)' },
+          horzLines: { color: 'rgba(27, 45, 73, 0.4)' },
+        },
+        crosshair: {
+          mode: LightweightCharts.CrosshairMode.Normal,
+          vertLine: {
+            color: '#f5b942',
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed,
+            labelBackgroundColor: '#1b2d49',
+          },
+          horzLine: {
+            color: '#f5b942',
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed,
+            labelBackgroundColor: '#1b2d49',
+          },
+        },
+        rightPriceScale: {
+          borderColor: '#1e293b',
+          scaleMargins: {
+            top: 0.08,
+            bottom: 0.08,
+          },
+        },
+        timeScale: {
+          borderColor: '#1e293b',
+          timeVisible: true,
+          secondsVisible: false,
+        },
+      });
 
-    // Read layer toggles
-    const showPrice = $("#layer-price") ? $("#layer-price").checked : true;
-    const showEma50 = $("#layer-ema50") ? $("#layer-ema50").checked : true;
-    const showEma200 = $("#layer-ema200") ? $("#layer-ema200").checked : true;
+      // Candlestick Series
+      candleSeries = tvChart.addCandlestickSeries({
+        upColor: '#22c55e',
+        downColor: '#ef4444',
+        borderVisible: false,
+        wickUpColor: '#22c55e',
+        wickDownColor: '#ef4444',
+      });
+
+      // EMA 50 Line Series (Amber)
+      ema50Series = tvChart.addLineSeries({
+        color: '#f5b942',
+        lineWidth: 2,
+        title: 'EMA 50',
+      });
+
+      // EMA 200 Line Series (Purple)
+      ema200Series = tvChart.addLineSeries({
+        color: '#a855f7',
+        lineWidth: 2,
+        title: 'EMA 200',
+      });
+
+      // Subscribe to Crosshair hover to update OHLC header live
+      tvChart.subscribeCrosshairMove(param => {
+        if (!param || !param.time || !param.seriesData) {
+          updateOhlcHeader(lastOhlcBarData);
+          return;
+        }
+        const bar = param.seriesData.get(candleSeries);
+        if (bar) {
+          updateOhlcHeader(bar);
+        } else {
+          updateOhlcHeader(lastOhlcBarData);
+        }
+      });
+
+      // Attach ResizeObserver to auto-fit container width
+      if (!container._hasResizeObserver && window.ResizeObserver) {
+        const ro = new ResizeObserver(entries => {
+          for (const entry of entries) {
+            if (entry.contentRect && entry.contentRect.width > 0 && tvChart) {
+              tvChart.applyOptions({ width: entry.contentRect.width });
+            }
+          }
+        });
+        ro.observe(container);
+        container._hasResizeObserver = true;
+      }
+    }
+
+    if (!tvChart || !candleSeries) return;
+
+    // Sort candles chronologically and convert datetime to UNIX seconds
+    const sorted = candles.slice().sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+    const chartCandles = [];
+    const seenTimes = new Set();
+
+    for (const c of sorted) {
+      const t = Math.floor(new Date(c.datetime).getTime() / 1000);
+      if (isNaN(t) || seenTimes.has(t)) continue;
+      seenTimes.add(t);
+      chartCandles.push({
+        time: t,
+        open: floatVal(c.open),
+        high: floatVal(c.high),
+        low: floatVal(c.low),
+        close: floatVal(c.close),
+      });
+    }
+
+    if (!chartCandles.length) return;
+
+    // Set Candlestick data
+    candleSeries.setData(chartCandles);
+
+    // Update OHLC Header with latest candle
+    lastOhlcBarData = chartCandles[chartCandles.length - 1];
+    updateOhlcHeader(lastOhlcBarData);
+
+    // Calculate & Set EMA Data
+    const closes = chartCandles.map(c => c.close);
+    const ema50Values = calcEma(closes, 50);
+    const ema200Values = calcEma(closes, 200);
+
+    const ema50Data = [];
+    const ema200Data = [];
+    for (let i = 0; i < chartCandles.length; i++) {
+      if (ema50Values[i] !== null) {
+        ema50Data.push({ time: chartCandles[i].time, value: ema50Values[i] });
+      }
+      if (ema200Values[i] !== null) {
+        ema200Data.push({ time: chartCandles[i].time, value: ema200Values[i] });
+      }
+    }
+    ema50Series.setData(ema50Data);
+    ema200Series.setData(ema200Data);
+
+    // Active FVG 50% CE Price Line
+    if (fvgPriceLine) {
+      try { candleSeries.removePriceLine(fvgPriceLine); } catch (e) {}
+      fvgPriceLine = null;
+    }
+
     const showFvg = $("#layer-fvg") ? $("#layer-fvg").checked : true;
-
-    // Check if we have active FVG levels from liveMarketData
-    let fvgCeDataset = null;
     if (showFvg && liveMarketData && liveMarketData.strategy && liveMarketData.strategy.active_fvgs) {
       const fvgs = liveMarketData.strategy.active_fvgs;
       if (fvgs && fvgs.length) {
         const lastFvg = fvgs[fvgs.length - 1];
-        const ceVal = lastFvg.ce_50 || ((lastFvg.top + lastFvg.bottom) / 2);
-        fvgCeDataset = {
-          label: `5M FVG 50% CE ($${fmt(ceVal)})`,
-          data: closes.map(() => ceVal),
-          borderColor: "#36d399",
-          borderWidth: 1.5,
-          borderDash: [6, 4],
-          pointRadius: 0
-        };
+        const ceVal = floatVal(lastFvg.ce_50 || ((lastFvg.top + lastFvg.bottom) / 2));
+        fvgPriceLine = candleSeries.createPriceLine({
+          price: ceVal,
+          color: '#36d399',
+          lineWidth: 2,
+          lineStyle: LightweightCharts.LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: `5M FVG 50% CE ($${fmt(ceVal)})`,
+        });
       }
     }
 
-    const datasets = [
-      {
-        label: "XAU/USD Close",
-        data: closes,
-        borderColor: "#38bdf8",
-        borderWidth: 2,
-        pointRadius: 0,
-        tension: 0.1,
-        hidden: !showPrice
-      },
-      {
-        label: "EMA 50",
-        data: ema50,
-        borderColor: "#f5b942",
-        borderWidth: 1.5,
-        pointRadius: 0,
-        borderDash: [4, 4],
-        hidden: !showEma50
-      },
-      {
-        label: "EMA 200",
-        data: ema200,
-        borderColor: "#a855f7",
-        borderWidth: 1.5,
-        pointRadius: 0,
-        hidden: !showEma200
-      }
-    ];
+    // Apply layer visibility filters
+    updateChartLayers();
 
-    if (fvgCeDataset) {
-      datasets.push(fvgCeDataset);
-    }
-
-    const ctx = $("#main-chart").getContext("2d");
-    if (marketChart) marketChart.destroy();
-
-    marketChart = new Chart(ctx, {
-      type: "line",
-      data: { labels, datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: "index", intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: "#0c1524",
-            borderColor: "#1b2d49",
-            borderWidth: 1,
-            titleFont: { family: "DM Mono" },
-            bodyFont: { family: "DM Mono" }
-          }
-        },
-        scales: {
-          x: {
-            ticks: { color: "#5a6e8b", font: { family: "DM Mono", size: 9 }, maxTicksLimit: 10 },
-            grid: { color: "#132135" }
-          },
-          y: {
-            ticks: { color: "#8b9bb4", font: { family: "DM Mono", size: 10 } },
-            grid: { color: "#132135" }
-          }
-        }
-      }
-    });
+    // Auto-fit content to view recent candles nicely
+    tvChart.timeScale().fitContent();
 
   } catch (err) {
     console.error("Chart load error:", err);
@@ -293,18 +404,23 @@ async function loadMarketChart(timeframe = "5min") {
 }
 
 function updateChartLayers() {
-  if (!marketChart) {
-    loadMarketChart(currentTf);
-    return;
-  }
-  const showPrice = $("#layer-price").checked;
-  const showEma50 = $("#layer-ema50").checked;
-  const showEma200 = $("#layer-ema200").checked;
+  const showPrice = $("#layer-price") ? $("#layer-price").checked : true;
+  const showEma50 = $("#layer-ema50") ? $("#layer-ema50").checked : true;
+  const showEma200 = $("#layer-ema200") ? $("#layer-ema200").checked : true;
+  const showFvg = $("#layer-fvg") ? $("#layer-fvg").checked : true;
 
-  if (marketChart.data.datasets[0]) marketChart.data.datasets[0].hidden = !showPrice;
-  if (marketChart.data.datasets[1]) marketChart.data.datasets[1].hidden = !showEma50;
-  if (marketChart.data.datasets[2]) marketChart.data.datasets[2].hidden = !showEma200;
-  marketChart.update();
+  if (candleSeries) {
+    candleSeries.applyOptions({ visible: showPrice });
+  }
+  if (ema50Series) {
+    ema50Series.applyOptions({ visible: showEma50 });
+  }
+  if (ema200Series) {
+    ema200Series.applyOptions({ visible: showEma200 });
+  }
+  if (fvgPriceLine && candleSeries) {
+    fvgPriceLine.applyOptions({ lineVisible: showFvg });
+  }
 }
 
 function floatVal(v) {

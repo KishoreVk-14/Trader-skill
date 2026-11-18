@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
 
@@ -175,14 +176,24 @@
             <h3 id="chart-canvas-title">XAU/USD · 5-Minute Chart</h3>
           </div>
           <div class="legend-pills">
-            <span class="pill-blue">● Price</span>
+            <span class="pill-green">● Bullish Candle</span>
+            <span class="pill-red" style="color: #ef4444;">● Bearish Candle</span>
             <span class="pill-amber">● EMA 50</span>
             <span class="pill-purple">● EMA 200</span>
-            <span class="pill-green">■ 5M FVG (50% CE)</span>
+            <span class="pill-green">-- 5M FVG 50% CE</span>
           </div>
         </div>
-        <div class="chart-container">
-          <canvas id="main-chart"></canvas>
+        <div class="ohlc-header-bar" id="ohlc-bar">
+          <span class="ohlc-ticker">XAU/USD</span>
+          <span class="ohlc-item">O: <b id="ohlc-open">—</b></span>
+          <span class="ohlc-item">H: <b id="ohlc-high">—</b></span>
+          <span class="ohlc-item">L: <b id="ohlc-low">—</b></span>
+          <span class="ohlc-item">C: <b id="ohlc-close">—</b></span>
+          <span class="ohlc-item" id="ohlc-change-badge">—</span>
+        </div>
+        <div class="chart-container" style="height: 500px;">
+          <div id="tv-chart-container" style="width: 100%; height: 100%;"></div>
+          <canvas id="main-chart" style="display:none;"></canvas>
         </div>
       </div>
 

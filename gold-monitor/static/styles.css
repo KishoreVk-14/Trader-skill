@@ -528,12 +528,58 @@ main {
 }
 
 .chart-container {
-  height: 400px;
+  height: 500px;
   position: relative;
 }
 
 .chart-container-sm {
   height: 250px;
+  position: relative;
+}
+
+/* OHLC Header Bar & TV Lightweight Charts */
+.ohlc-header-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 8px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.ohlc-ticker {
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+}
+
+.ohlc-item {
+  color: var(--text-muted);
+}
+
+.ohlc-item b {
+  color: var(--text-main);
+  font-weight: 600;
+  margin-left: 3px;
+}
+
+.ohlc-up {
+  color: var(--green) !important;
+}
+
+.ohlc-down {
+  color: var(--red) !important;
+}
+
+#tv-chart-container {
+  border: 1px solid var(--border);
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
   position: relative;
 }
 
